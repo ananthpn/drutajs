@@ -1,0 +1,32 @@
+<html>
+	<head>
+		<script src="../parse-js.js"></script>
+		<script src="../process-ast.js"></script>
+		<script src="../SyncToAsyncEvaluator.js"></script>
+		<script src="../Druta.js"></script>
+		<script src="../simulator/SimulatedAsyncCalls.js"></script>
+		<script language="JavaScript">
+			var druta;			
+			function init()
+			{
+				druta = new Druta(
+					function(e, ret){
+						//alert(ret);
+						console.log("after async execution everything completed");
+					}
+				);
+			}
+
+			function hello()
+			{
+				var fn = druta.run(function test() {
+						alert(asyncEcho1(1000, $$callBack, "From Druta: Hello World!"));
+					}							
+				);								
+			}
+		</script>
+	</head>
+	<body onload = "init()">
+		<input type="button" value="Hello World" onclick="hello()" />
+	</body>
+</html>

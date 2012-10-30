@@ -1,0 +1,140 @@
+<html>
+	<head>
+		<title>
+			This is to test the Druta runtime
+		</title>
+		<script src="../parse-js.js"></script>
+		<script src="../process-ast.js"></script>
+		<script src="../SyncToAsyncEvaluator.js"></script>
+		<script src="../Druta.js"></script>
+		<script src="../simulator/SimulatedAsyncCalls.js"></script>
+		<script language="JavaScript">
+			var self = this;
+			var druta;			
+			function init()
+			{
+				druta = new Druta(
+					function(e, ret){
+						//alert(ret);
+						console.log("after async execution everything completed");
+					}
+				);
+			}
+/*****************************************************************************************************************************************************
+ * 				DRUTA TEST CASES
+ ****************************************************************************************************************************************************/			
+			function hello()
+			{
+				var fn = druta.run(function test() {
+						alert(asyncEcho1(1000, $$callBack, "From Druta: Hello World!"));
+					}							
+				);								
+			}
+			
+			function vardefs()
+			{
+				druta.run(function test() {
+					var y = asyncEcho($$callBack, 100, "10"), 	x = 7654, z = "abcd";
+					var x = 10;
+					alert("x = " + x);					
+					x = asyncArith($$callBack, 1000, '*', x, y);
+					alert(z + x);
+				});
+			}
+
+			function arith()
+			{
+				var fn = druta.run(function test() {
+						x123 = 10;
+						y123 = 20;
+						k123 = asyncArith($$callBack, 1000, "+", 400, 100) *  asyncArith($$callBack, 1000, "+", 400, 100);
+						alert("async * async: " + k123);
+						k123 = asyncArith($$callBack, 1000, "+", 400, 100) * (syncArith("/", 300, 100) + asyncArith($$callBack, 1000, "+", 400, 100));
+						alert("async e1, sync e2 = " + k123); 
+						k123 = syncArith("/", 300, 100) + asyncArith($$callBack, 1000, "+", 400, 100) ;
+						alert("sync e1, async e2 = " + k123); 
+						mystr = asyncArith($$callBack, 1000, "-", 400, 100);
+						alert("Simple arith: " + mystr);
+					}							
+				);				
+			}
+
+			function bool()
+			{
+				var fn = druta.run(function test() {
+						a123 = true; b123 = false;
+						//if (a123 || b123) alert("hello"); else alert("world!");
+						
+						if (asyncBool($$callBack, 1000, "&&", a123, a123) || a123) {
+							k123 = asyncEcho($$callBack, 500, "Executing ") + asyncEcho($$callBack, 500, "then") + " magically!!!";
+							alert(k123);
+						}
+						else
+						{
+							k123 = asyncEcho($$callBack, 1000, "else!");
+							alert(k123);
+						}
+						
+						alert("done");							
+						
+						if (asyncBool($$callBack, 1000, "&&", a123, a123)) {
+							if (asyncBool($$callBack, 1000, "&&", a123, a123)) {
+								k123 = asyncEcho($$callBack, 1000, "true!!");
+								alert(k123);
+							}
+						}
+						
+					}							
+				);				
+			}
+			
+			function iterate()
+			{
+			
+				function test1() {
+					var k123, x123;
+					for (var i = 0; i < 4; i = asyncArith($$callBack, 100, '+', i, 1))
+					{
+						for (var j = 0; j < asyncEcho($$callBack, 100, "" + i); j++) {
+							for (var k = 0; k < 2 ; k = (asyncArith($$callBack, 100, "+", k, 0))++)
+							{ 
+								k123 = asyncEcho($$callBack, 100, "i, j, k = " + i + "," + j + "," + k);								
+								if (i == 2) {x123 = asyncEcho($$callBack, 100, "inner: hello world, i, j, k = " + i + ", " + j + ", " + k); alert(x123); continue;} 								
+								alert(k123); //expected: 								
+							}
+						}					
+					}
+				};
+			
+				var code = druta.compile(test1);
+				if (code != null) console.log(code);
+				else console.log("Compile error from druta, check your code");
+				druta.run(code);
+			}			
+
+			function iterativeEcho()
+			{
+				druta.run([
+							[null, "_for", "var i = 0; i < 5; i++", [[null, "_for", "var j = 0; j < 2; j++", ["alert('hello' +  j);"]]																	 ]
+							]
+						  ]
+						 );				
+			}				
+
+			function test()
+			{
+				druta.run(function test() {
+					alert("from aE2, " + asyncEcho($$callBack, 100, "from sE2, " + syncEcho("from aE1, " + asyncEcho($$callBack, 1000, "from sE1, " + syncEcho("hello world.....")))));		
+				})
+			}
+		</script>
+	</head>
+	<body onload = "init()">
+		<input type="button" value="Hello World" onclick="hello()" />
+		<input type="button" value="Test" onclick="test()" />
+		<input type="button" value="var definition" onclick="vardefs()" />
+		<input type="button" value="Arith" onclick="arith()" />
+		<input type="button" value="bool" onclick="bool(); alert('after bool')"; />
+		<input type="button" value="iterate" onclick="iterate(); "; />
+	</body>
+</html>

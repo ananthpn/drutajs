@@ -1,7 +1,6 @@
-## What is Druta?
+What is Druta?
 
-**Druta (meaning, quick/swift/run in Sanskrit), is a runtime that executed abstract instructions on top of JS.
-Date: 26 Oct 2012
+Druta (meaning, quick/swift/run in Sanskrit), is a runtime that executes abstract instructions on top of JS.
 
 The objective of Druta is to simplify asynchronous programming that is very common while developing HTML5 applications.
 

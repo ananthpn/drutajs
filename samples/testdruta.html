@@ -62,7 +62,7 @@
 			function bool()
 			{
 				var fn = druta.run(function test() {
-						a123 = true; b123 = false;
+						a123 = false; b123 = false;
 						//if (a123 || b123) alert("hello"); else alert("world!");
 						
 						if (asyncBool($$callBack, 1000, "&&", a123, a123) || a123) {

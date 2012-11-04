@@ -156,6 +156,19 @@ function instrument(code) {
 							"bodyCode": ins.bodyCode
 						});
 						break;
+					case "defun":
+						var temp = [];
+						console.log("processing func statement");
+						genBlockCode(ins.code, temp);
+						ins.code = temp;
+						return({
+							"async": ins.async,
+							"command": ins.command,
+							"code" : ins.code,
+							"args" : null,
+							"name" : ins.name
+						});
+						break;
 					default:
 						return({"async": ins.async, "command": ins.command, "code": gen_code(ins.code, {beautify:true})});
 						break;
@@ -611,7 +624,52 @@ function instrument(code) {
         var ret = [ this[0], ret1, ret2, ret3, ret4 ];
 	    return ret;
 	}
+
+
+	function doDefun(name, args, body)
+	{
+		//return [ this[0], name, args.slice(), MAP(body, walk) ];
+		var slist = syncList; //save the syncList as the following walk will modify it
+		var cbuf = codeBuffer;
+		var fCode = [];
+		syncList = [];
+		codeBuffer = fCode;
 		
+		var map = MAP(body, w.walk);
+		if (syncList.length > 0) codeBuffer.push.apply(codeBuffer, syncList);
+
+		var ret = [ this[0], name, args.slice(), map ];
+		
+		syncList.push({"async": false, "command": this[0], "name": name, "code": fCode });
+		return ret;
+	}		
+	
+	function doDot(expr)
+	{
+		var ret1;		
+		var status;
+		status = Status.async;				
+		Status.async = false;
+		ret1 = w.walk(expr);
+		if (Status.async) {
+			var name1 = currentTempName(); //name1 contains the name of expr1
+			Status.async = true;
+	        var ret = [ "splice", [ ["stat", ret1], [this[0], ["name", name1]].concat(slice(arguments, 1)) ] ];
+			var s1 = [ "stat", [ "assign", true, ["name", getTempName()], [this[0], ["name", name1]].concat(slice(arguments, 1)) ] ];
+			tempStack.push(["name", currentTempName()]); 										
+			syncList.push({"async": false, "command": this[0], code:s1 });
+			//syncList.push({"async": false, "command": this[0], code:[this[0], ["name", name1]].concat(slice(arguments, 1)) });
+			return ret;			
+		}
+		else {
+			Status.async = status;														
+			//syncList.push({"async": false, "command": this[0], code: [ this[0], ret1 ].concat(slice(arguments, 1))});
+			return [ this[0], ret1 ].concat(slice(arguments, 1));				
+		}			
+		
+		
+		
+	}		
 	
     var new_ast = w.with_walkers({
 				"name"	   : function(name) {
@@ -639,7 +697,7 @@ function instrument(code) {
                 "return"   : passThrough,
                 "throw"    : passThrough,
                 "try"      : passThrough,
-                "defun"    : passThrough,
+                "defun"    : doDefun, //passThrough,
                 "if"       : doIf,
                 "while"    : passThrough,
                 "do"       : passThrough,
@@ -654,6 +712,7 @@ function instrument(code) {
 		        "binary"   : doBinary,
 				"unary-prefix"	: doUnary,
 				"unary-postfix"	: doUnary,
+				"dot"		: doDot, 				
         	}, function(){
                 return w.walk(ast);
         });

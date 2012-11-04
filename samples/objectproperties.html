@@ -1,0 +1,44 @@
+<html>
+     <head>
+		<title>Test accessing object properties under Druta </title>
+		<script src="../parse-js.js"></script>
+		<script src="../process-ast.js"></script>
+		<script src="../SyncToAsyncEvaluator.js"></script>
+		<script src="../Druta.js"></script>
+		<script src="../simulator/SimulatedAsyncCalls.js"></script>
+          <script language="JavaScript">
+
+			  var druta;              
+              function init()
+              {
+                   druta = new Druta(
+                        function(e, ret){
+                             console.log("after async execution everything completed");
+                        }
+                   );
+              }
+              
+              function test(async)
+              {
+			  	   var synctst = function () {
+				   			alert(document.getElementById("txt1").value);
+                   }             
+			  	   var asynctst = function () {
+				   			alert("Length of string: " + document.getElementById("txt2").value + "is: " + asyncEcho($$callBack, 1000, document.getElementById("txt2").value).length);
+                   }             
+                   var fn = druta.run(async?asynctst:synctst);                                    
+              }
+          </script>
+	</head>
+
+     <body onload = "init()">
+     	  <h3>In this test we will verify how Druta executes accessing JavaScript objects and properties of objects. 
+		      We will use DOM objects to test synchronous objects and a simulated object for testing asynchronous behavior</h3>
+		  <h5>Synchronous Test - Type yopur message in text box and click sync test button</h5>
+          <input type="text" value="Hello world from Druta" id = "txt1" />
+          <input type="button" value="Sync Test" onclick="test(false)" />
+		  <h5>Asynchronous Test - Type yopur message in text box and click async test button to get the length of the string you entered</h5>
+          <input type="text" value="Async message: Hello world from Druta" id = "txt2" />
+          <input type="button" value="Async Test" onclick="test(true)" />
+     </body>
+</html>
